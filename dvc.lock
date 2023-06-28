@@ -15,3 +15,28 @@ stages:
       md5: c3010cfd407af01fc71666a522e4b168.dir
       size: 1837161836
       nfiles: 3050
+  preprocessing:
+    cmd: python src\preprocess.py
+    deps:
+    - path: data\raw
+      hash: md5
+      md5: c3010cfd407af01fc71666a522e4b168.dir
+      size: 1837161836
+      nfiles: 3050
+    - path: src\preprocess.py
+      hash: md5
+      md5: 69d0f2fb36acc27569a92aaef4711d29
+      size: 1987
+    params:
+      params.yaml:
+        preprocessing:
+          mask_color:
+          - 255
+          - 255
+          - 0
+    outs:
+    - path: data\clean
+      hash: md5
+      md5: 5e89cfde88365cf06c004b7f0e3c1369.dir
+      size: 106515217
+      nfiles: 1928

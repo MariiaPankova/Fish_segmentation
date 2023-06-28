@@ -7,4 +7,13 @@ stages:
       - data\train_val.zip
     outs:
       - data\raw 
-        
+  
+  preprocessing:
+    cmd: python src\preprocess.py
+    deps: 
+      - data\raw
+      - src\preprocess.py
+    outs:
+      - data\clean
+    params:
+      - preprocessing
