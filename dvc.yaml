@@ -1,0 +1,10 @@
+stages:
+  get_data:
+    cmd: 
+      - mkdir data\raw
+      - tar -xvzf data\train_val.zip -C data\raw
+    deps:
+      - data\train_val.zip
+    outs:
+      - data\raw 
+        

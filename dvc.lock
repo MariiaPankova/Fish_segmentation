@@ -1,0 +1,17 @@
+schema: '2.0'
+stages:
+  get_data:
+    cmd:
+    - mkdir data\raw
+    - tar -xvzf data\train_val.zip -C data\raw
+    deps:
+    - path: data\train_val.zip
+      hash: md5
+      md5: 78c6e1d34ab05c88d8e2957edb036d35
+      size: 171853482
+    outs:
+    - path: data\raw
+      hash: md5
+      md5: c3010cfd407af01fc71666a522e4b168.dir
+      size: 1837161836
+      nfiles: 3050
