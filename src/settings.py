@@ -1,0 +1,5 @@
+IMAGE_INPUT_FOLDER = r"data\raw\train_val\images"
+MASK_INPUT_FOLDER = r"data\raw\train_val\masks"
+IMAGE_OUTPUT_FOLDER = r"data\clean\images"
+MASK_OUTPUT_FOLDER = r"data\clean\masks"
+EMPTY_IMAGE_OUTPUT_FOLDER = r"data\clean\empty_images"

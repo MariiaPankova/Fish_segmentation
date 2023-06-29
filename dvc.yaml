@@ -17,3 +17,20 @@ stages:
       - data\clean
     params:
       - preprocessing
+
+  train:
+    cmd: python src\train.py
+    deps: 
+      - src\core
+      - data\clean
+      - src\train.py
+    outs:
+      - weights
+    params:
+      - transform
+      - dataset
+      - model
+    metrics:
+      - dvclive\metrics.json
+    plots:
+      - dvclive\plots
