@@ -8,17 +8,27 @@ from core.model import LITFishSegmentation
 from pytorch_lightning import Trainer
 from dvclive import Live
 from dvclive.lightning import DVCLiveLogger
-
+import pytorch_lightning as pl
+import os
 
 if __name__ == "__main__":
+    pl.seed_everything(42)
     params = params_show()
     transforms = A.from_dict(params["transform"])
-    train_data, val_data = get_mixed_dataset(**params["dataset"], transforms=transforms
-    )
+    train_data, val_data = get_mixed_dataset(**params["dataset"], transforms=transforms)
     train_dataloader = DataLoader(train_data, batch_size=32, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
-
     model = LITFishSegmentation(**params["model"])
+
     with Live() as live:
-        trainer = Trainer(accelerator="gpu", logger=DVCLiveLogger(experiment=live), default_root_dir="weights")
-        trainer.fit(model=model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
+        os.makedirs("dvclive\plots\custom", exist_ok=True)
+        trainer = Trainer(
+            accelerator="gpu",
+            logger=DVCLiveLogger(experiment=live),
+            default_root_dir="weights",
+        )
+        trainer.fit(
+            model=model,
+            train_dataloaders=train_dataloader,
+            val_dataloaders=val_dataloader,
+        )

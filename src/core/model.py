@@ -3,6 +3,9 @@ from pytorch_lightning.utilities.types import STEP_OUTPUT
 import torch
 import numpy as np
 import pytorch_lightning as pl
+import torch.nn.functional as F
+import torchmetrics
+from core.utils import draw_batch
 
 
 class SegmentationHead(torch.nn.Module):
@@ -23,17 +26,19 @@ class SegmentationHead(torch.nn.Module):
         x = self.sigmoid(x)
         x = self.upsample(x)
         return x
-    
+
 
 class LITFishSegmentation(pl.LightningModule):
-    def __init__(self, backbone_type, head_args, learning_rate) -> None:
+    def __init__(self, backbone_type, head_args, learning_rate, threshold) -> None:
         super().__init__()
         self.learning_rate = learning_rate
         self.loss_function = torch.nn.MSELoss()
         self.backbone = torch.hub.load("facebookresearch/dinov2", backbone_type)
         self.backbone.requires_grad = False
         self.head = SegmentationHead(**head_args)
-
+        self.val_batch: torch.Tensor | None = None
+        self.threshold = threshold
+        self.iou = torchmetrics.JaccardIndex("binary", threshold=self.threshold)
 
     def forward(self, batch) -> Any:
         self.backbone.eval()
@@ -45,16 +50,25 @@ class LITFishSegmentation(pl.LightningModule):
     def configure_optimizers(self) -> Any:
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
-    
+
     def training_step(self, batch, batch_idx):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction.squeeze(), batch["mask"].squeeze())
         self.log("train_loss", loss)
+        self.iou(prediction.squeeze(), batch["mask"].squeeze())
+        self.log("train_step_iou", self.iou)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction.squeeze(), batch["mask"].squeeze())
+        self.iou(prediction.squeeze(), batch["mask"].squeeze())
         self.log("val_loss", loss)
+        pred_mask = torch.where(prediction > self.threshold, 1, 0)
+        self.val_batch = {"image": batch["image"], "mask": pred_mask}
 
-    
+    def on_validation_epoch_end(self):
+        draw_batch(
+            self.val_batch, f"dvclive\plots\custom\epoch_{self.current_epoch}.jpg"
+        )
+        self.log("val_iou", self.iou)

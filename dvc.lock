@@ -50,13 +50,13 @@ stages:
       nfiles: 2404
     - path: src\core
       hash: md5
-      md5: 361c4b47d428d1eeb6b29f710764b994.dir
-      size: 10372
-      nfiles: 4
+      md5: 166e9222122c132d9fa6fe800080efa7.dir
+      size: 14299
+      nfiles: 6
     - path: src\train.py
       hash: md5
-      md5: b47a396e4ba9fd193434e419bfadeb33
-      size: 1020
+      md5: bfa943f23d619dc03b7a0c71bb829cf1
+      size: 1154
     params:
       params.yaml:
         dataset:
@@ -71,6 +71,7 @@ stages:
             - 224
             scale_factor: 7
           learning_rate: 0.001
+          threshold: 0.6
         transform:
           __version__: 1.3.1
           transform:
@@ -106,15 +107,15 @@ stages:
     outs:
     - path: dvclive\metrics.json
       hash: md5
-      md5: ba3f056e0f3893ce60a7e6ee09767d03
-      size: 98
+      md5: 7ef8102f38045307c56ce54e952f13bf
+      size: 238
     - path: dvclive\plots
       hash: md5
-      md5: 9f95483f03a37011165248d21774a6d2.dir
-      size: 53
-      nfiles: 2
+      md5: 7af5dd978f18fe3e36169283ea9414eb.dir
+      size: 23586722
+      nfiles: 57
     - path: weights
       hash: md5
-      md5: e58b7182890af8b4660b02b7d8f147b2.dir
+      md5: 93945c321afdf1c9aa692864c673b1a7.dir
       size: 93028433
       nfiles: 1
