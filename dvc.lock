@@ -3,30 +3,35 @@ stages:
   get_data:
     cmd:
     - mkdir data\raw
-    - tar -xvzf data\train_val.zip -C data\raw
+    - tar -xvzf data\archives\train_val.zip -C data\raw
+    - tar -xvzf data\archives\TEST.zip -C data\raw
     deps:
-    - path: data\train_val.zip
+    - path: data\archives\TEST.zip
+      hash: md5
+      md5: c4581d00d198ad02178a394fab10d664
+      size: 12791017
+    - path: data\archives\train_val.zip
       hash: md5
       md5: 78c6e1d34ab05c88d8e2957edb036d35
       size: 171853482
     outs:
     - path: data\raw
       hash: md5
-      md5: c3010cfd407af01fc71666a522e4b168.dir
-      size: 1837161836
-      nfiles: 3050
+      md5: 1d5236b0bbcfd466dd35c72619409c2f.dir
+      size: 2281865264
+      nfiles: 4150
   preprocessing:
     cmd: python src\preprocess.py
     deps:
     - path: data\raw
       hash: md5
-      md5: c3010cfd407af01fc71666a522e4b168.dir
-      size: 1837161836
-      nfiles: 3050
+      md5: 1d5236b0bbcfd466dd35c72619409c2f.dir
+      size: 2281865264
+      nfiles: 4150
     - path: src\preprocess.py
       hash: md5
-      md5: b242fa3223ae7a4e2672c01bfa18a2f5
-      size: 2092
+      md5: 48ae2b7b927b48542565e647ae730370
+      size: 3328
     params:
       params.yaml:
         preprocessing:
@@ -37,39 +42,40 @@ stages:
     outs:
     - path: data\clean
       hash: md5
-      md5: 46c75af7a727aa940441bef835c89feb.dir
-      size: 158758136
-      nfiles: 2404
+      md5: 43f778f7fb551b167af5462b3d71f92d.dir
+      size: 169149810
+      nfiles: 2580
   train:
     cmd: python src\train.py
     deps:
     - path: data\clean
       hash: md5
-      md5: 46c75af7a727aa940441bef835c89feb.dir
-      size: 158758136
-      nfiles: 2404
+      md5: 43f778f7fb551b167af5462b3d71f92d.dir
+      size: 169149810
+      nfiles: 2580
     - path: src\core
       hash: md5
-      md5: 166e9222122c132d9fa6fe800080efa7.dir
-      size: 14299
+      md5: ea7bdf25af404827a6ca6b2eaaaa20a7.dir
+      size: 17909
       nfiles: 6
     - path: src\train.py
       hash: md5
-      md5: bfa943f23d619dc03b7a0c71bb829cf1
-      size: 1154
+      md5: bf4710f48aa9c3d5ace21c310b0970ab
+      size: 1734
     params:
       params.yaml:
         dataset:
           empty_images_ratio: 0.1
           train_val_ratio: 0.8
         model:
-          backbone_type: dinov2_vits14
+          backbone_type: dinov2_vitb14
           head_args:
-            input_shape: 384
+            input_shape: 768
             output_shape:
             - 224
             - 224
             scale_factor: 7
+            inner_shape: 1024
           learning_rate: 0.001
           threshold: 0.6
         transform:
@@ -88,6 +94,48 @@ stages:
               interpolation: 1
               p: 1
               width: 224
+            - __class_fullname__: ShiftScaleRotate
+              always_apply: false
+              border_mode: 4
+              interpolation: 1
+              mask_value:
+              p: 0.5
+              rotate_limit:
+              - -30
+              - 30
+              rotate_method: largest_box
+              scale_limit:
+              - -0.19999999999999996
+              - 0.19999999999999996
+              shift_limit_x:
+              - -0.2
+              - 0.2
+              shift_limit_y:
+              - -0.2
+              - 0.2
+              value:
+            - __class_fullname__: RGBShift
+              always_apply: false
+              b_shift_limit:
+              - -25
+              - 25
+              g_shift_limit:
+              - -25
+              - 25
+              p: 0.5
+              r_shift_limit:
+              - -25
+              - 25
+            - __class_fullname__: RandomBrightnessContrast
+              always_apply: false
+              brightness_by_max: true
+              brightness_limit:
+              - -0.3
+              - 0.3
+              contrast_limit:
+              - -0.3
+              - 0.3
+              p: 0.5
             - __class_fullname__: Normalize
               always_apply: false
               max_pixel_value: 255.0
@@ -107,15 +155,15 @@ stages:
     outs:
     - path: dvclive\metrics.json
       hash: md5
-      md5: 7ef8102f38045307c56ce54e952f13bf
-      size: 238
+      md5: 792257d50bb4a69bf468f72c3c932713
+      size: 327
     - path: dvclive\plots
       hash: md5
-      md5: 7af5dd978f18fe3e36169283ea9414eb.dir
-      size: 23586722
-      nfiles: 57
+      md5: 28033cdc5042d27d212ce4ee94b53531.dir
+      size: 5959099
+      nfiles: 24
     - path: weights
       hash: md5
-      md5: 93945c321afdf1c9aa692864c673b1a7.dir
-      size: 93028433
-      nfiles: 1
+      md5: 9674c7efa3b910c5c13e27874fdacf52.dir
+      size: 762071810
+      nfiles: 2

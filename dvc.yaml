@@ -2,11 +2,13 @@ stages:
   get_data:
     cmd: 
       - mkdir data\raw
-      - tar -xvzf data\train_val.zip -C data\raw
+      - tar -xvzf data\archives\train_val.zip -C data\raw
+      - tar -xvzf data\archives\TEST.zip -C data\raw
     deps:
-      - data\train_val.zip
+      - data\archives\train_val.zip
+      - data\archives\TEST.zip
     outs:
-      - data\raw 
+      - data\raw
   
   preprocessing:
     cmd: python src\preprocess.py

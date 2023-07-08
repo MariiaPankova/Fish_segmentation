@@ -21,6 +21,48 @@ transform:
       interpolation: 1
       p: 1
       width: 224
+    - __class_fullname__: ShiftScaleRotate
+      always_apply: false
+      border_mode: 4
+      interpolation: 1
+      mask_value: null
+      p: 0.5
+      rotate_limit:
+      - -30
+      - 30
+      rotate_method: largest_box
+      scale_limit:
+      - -0.19999999999999996
+      - 0.19999999999999996
+      shift_limit_x:
+      - -0.2
+      - 0.2
+      shift_limit_y:
+      - -0.2
+      - 0.2
+      value: null
+    # - __class_fullname__: RGBShift
+    #   always_apply: false
+    #   b_shift_limit:
+    #   - -25
+    #   - 25
+    #   g_shift_limit:
+    #   - -25
+    #   - 25
+    #   p: 0.5
+    #   r_shift_limit:
+    #   - -25
+    #   - 25
+    # - __class_fullname__: RandomBrightnessContrast
+    #   always_apply: false
+    #   brightness_by_max: true
+    #   brightness_limit:
+    #   - -0.3
+    #   - 0.3
+    #   contrast_limit:
+    #   - -0.3
+    #   - 0.3
+    #   p: 0.5
     - __class_fullname__: Normalize
       always_apply: false
       max_pixel_value: 255.0
@@ -38,17 +80,23 @@ transform:
       p: 1.0
       transpose_mask: false
 
+
+
 dataset:
   empty_images_ratio: 0.1
   train_val_ratio: 0.8
 
+test_dataset:
+  empty_images_ratio: 0.1
+
 model:
-  backbone_type:  dinov2_vits14
+  backbone_type:  dinov2_vitb14
   head_args:
-    input_shape:  384
+    input_shape:  768
     output_shape: 
       - 224
       - 224
     scale_factor: 7
+    inner_shape: 1024
   learning_rate: 0.001
   threshold: 0.6
