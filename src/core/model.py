@@ -10,62 +10,96 @@ import pytorch_optimizer
 import segmentation_models_pytorch as smp
 
 
-class SegmentationHead(torch.nn.Module):
-    def __init__(
-        self,
-        input_shape: int = 384,
-        output_shape=(224, 224),
-        inner_shape=1024,
-        scale_factor=7,
-    ):
-        super(SegmentationHead, self).__init__()
-        self.output_shape = output_shape
-        self.scale_factor = scale_factor
-        self.linear1 = torch.nn.Linear(input_shape, inner_shape)
-        self.relu = torch.nn.ReLU()
-        self.linear2 = torch.nn.Linear(
-            inner_shape, np.prod(output_shape) // scale_factor**2 * 2
-        )
-        self.softmax = torch.nn.Softmax(dim=1)
-        self.upsample = torch.nn.Upsample(scale_factor=scale_factor, mode="bilinear")
-
+class ConvBlock(torch.nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=(3,3)) -> None:
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size, padding="same")
+        self.activation = torch.nn.ReLU()
+        self.conv2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size, padding="same")
+    
     def forward(self, x):
-        x = self.linear1(x)
-        x = self.relu(x)
-        x = self.linear2(x)
-        x = x.reshape(
-            (
-                len(x),
-                2,
-                self.output_shape[0] // self.scale_factor,
-                self.output_shape[1] // self.scale_factor,       
-            )
-        )
-        x = self.softmax(x)
-        x = self.upsample(x)
+        x = self.conv1(x)
+        x = self.activation(x)
+        x = self.conv2(x)
+        x = self.activation(x)
         return x
 
 
+class FishUnet(torch.nn.Module):
+    def __init__(self, in_channels=3, output_channels=2, kernel_size=(3,3)):
+        super().__init__()
+        # 224x224        
+        self.conv_down1 = ConvBlock(in_channels, 64, kernel_size)
+        self.max_pool1 = torch.nn.MaxPool2d((2,2), stride=2) # 112x112
+        
+        self.conv_down2 = ConvBlock(64, 128, kernel_size)
+        self.max_pool2 = torch.nn.MaxPool2d((2,2), stride=2) # 56x56
+        
+        self.conv_down3 = ConvBlock(128, 256, kernel_size)
+        self.max_pool3 = torch.nn.MaxPool2d((2,2), stride=2) # 28x28 
+        
+        self.conv_down4 = ConvBlock(256, 512, kernel_size)
+
+        self.conv_transpose3 = torch.nn.ConvTranspose2d(512, 256, kernel_size=(2,2), stride=2) # 56x56
+        self.conv_up3 = ConvBlock(512, 256, kernel_size)
+
+        self.conv_transpose2 = torch.nn.ConvTranspose2d(256, 128, kernel_size=(2,2), stride=2) # 112x112
+        self.conv_up2 = ConvBlock(256, 128, kernel_size) 
+
+        self.conv_transpose1 = torch.nn.ConvTranspose2d(128, 64, kernel_size=(2,2), stride=2) # 224x224
+        self.conv_up1 = ConvBlock(128, 64, kernel_size)
+
+        self.final_conv = torch.nn.Conv2d(64, output_channels, kernel_size=(1, 1))
+
+        self.softmax = torch.nn.Softmax2d()
+
+
+    def forward(self, x):
+        x_down1 = self.conv_down1(x)
+        x_down2 = self.max_pool1(x_down1)
+
+        x_down2 = self.conv_down2(x_down2)
+        x_down3 = self.max_pool2(x_down2)
+
+        x_down3 = self.conv_down3(x_down3)
+        x_down4 = self.max_pool3(x_down3)
+
+        x_down4 = self.conv_down4(x_down4)
+
+        x_up3 = self.conv_transpose3(x_down4) 
+        # print(x_up3.shape, x_down3.shape)
+        x_up3 = torch.concatenate([x_up3, x_down3], dim=1)
+        x_up3 = self.conv_up3(x_up3)
+
+
+        x_up2 = self.conv_transpose2(x_up3)
+        x_up2 = torch.concatenate([x_up2, x_down2], dim=1)
+        x_up2 = self.conv_up2(x_up2)
+
+        x_up1 = self.conv_transpose1(x_up2)
+        x_up1 = torch.concatenate([x_up1, x_down1], dim=1)
+        x_up1 = self.conv_up1(x_up1)
+
+        res = self.final_conv(x_up1)
+        res = self.softmax(res)
+        return res
+
+
+
 class LITFishSegmentation(pl.LightningModule):
-    def __init__(self, backbone_type, head_args, learning_rate, threshold) -> None:
+    def __init__(self, model_args, learning_rate) -> None:
         super().__init__()
         self.learning_rate = learning_rate
-        self.loss_function = smp.losses.DiceLoss(mode="multiclass")
-        self.backbone = torch.hub.load("facebookresearch/dinov2", backbone_type)
-        self.head = SegmentationHead(**head_args)
+        self.loss_function = torch.nn.CrossEntropyLoss()
+        self.model = FishUnet(**model_args)
         self.val_batch: torch.Tensor | None = None
-        self.threshold = threshold
-        self.train_iou = torchmetrics.JaccardIndex("binary", threshold=self.threshold)
-        self.val_iou = torchmetrics.JaccardIndex("binary", threshold=self.threshold)
-        self.test_iou = torchmetrics.JaccardIndex("binary", threshold=self.threshold)
-        self.backbone.requires_grad_(False)
+        self.train_iou = torchmetrics.JaccardIndex("binary")
+        self.val_iou = torchmetrics.JaccardIndex("binary")
+        self.test_iou = torchmetrics.JaccardIndex("binary")
         self.save_hyperparameters()
 
     def forward(self, batch) -> Any:
-        self.backbone.eval()
-        with torch.no_grad():
-            embedding = self.backbone(batch["image"])
-        pred_mask = self.head(embedding)
+        pred_mask = self.model(batch["image"])
         return pred_mask
 
     def configure_optimizers(self) -> Any:
@@ -76,7 +110,7 @@ class LITFishSegmentation(pl.LightningModule):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction, batch["mask"])
         self.log("train_loss", loss)
-        self.train_iou(prediction.argmax(dim=1), batch["mask"].squeeze(1))
+        self.train_iou(prediction.argmax(dim=1), batch["mask"].argmax(dim=1))
         return loss
 
     def on_train_epoch_end(self):
@@ -85,12 +119,10 @@ class LITFishSegmentation(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction, batch["mask"])
-        self.val_iou(prediction.argmax(dim=1), batch["mask"].squeeze(1))
+        self.val_iou(prediction.argmax(dim=1), batch["mask"].argmax(dim=1))
         self.log("val_loss", loss)
-        pred_mask = torch.where(prediction > self.threshold, 1, 0)
-
         if batch_idx == 0:
-            self.val_batch = {"image": batch["image"], "mask": pred_mask}
+            self.val_batch = {"image": batch["image"], "mask": prediction}
 
     def on_validation_epoch_end(self):
         draw_batch(
@@ -101,7 +133,7 @@ class LITFishSegmentation(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction, batch["mask"])
-        self.test_iou(prediction.argmax(dim=1), batch["mask"].squeeze(1))
+        self.test_iou(prediction.argmax(dim=1), batch["mask"].argmax(dim=1))
         self.log("test_loss", loss)
 
     def on_test_epoch_end(self):

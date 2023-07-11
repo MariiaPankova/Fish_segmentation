@@ -84,8 +84,6 @@ transform:
       transpose_mask: false
 
 
-
-
 dataset:
   empty_images_ratio: 0.1
   train_val_ratio: 0.8
@@ -94,13 +92,10 @@ test_dataset:
   empty_images_ratio: 0.1
 
 model:
-  backbone_type:  dinov2_vitb14
-  head_args:
-    input_shape:  768
-    output_shape: 
-      - 224
-      - 224
-    scale_factor: 7
-    inner_shape: 1024
+  model_args:
+    in_channels: 3
+    output_channels: 2
+    kernel_size: 
+      - 3 
+      - 3
   learning_rate: 0.001
-  threshold: 0.6
