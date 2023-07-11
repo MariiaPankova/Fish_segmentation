@@ -36,7 +36,7 @@ class FishDataset(Dataset):
             transformed = self.transform(image=image, mask=mask)
             image = transformed["image"]
             mask = transformed["mask"]
-        mask = F.one_hot(mask.to(torch.long), 2).permute((2,0,1)).to(torch.float)
+        mask = mask.to(torch.long).unsqueeze(0)
         return {"image": image, "mask": mask}
 
 

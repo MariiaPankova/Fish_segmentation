@@ -1,0 +1,8 @@
+head_args:
+  input_shape: 768
+  output_shape: '[224, 224]'
+  scale_factor: 7
+  inner_shape: 1024
+backbone_type: dinov2_vitb14
+learning_rate: 0.001
+threshold: 0.6

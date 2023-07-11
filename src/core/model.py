@@ -6,6 +6,8 @@ import pytorch_lightning as pl
 import torch.nn.functional as F
 import torchmetrics
 from core.utils import draw_batch
+import pytorch_optimizer
+import segmentation_models_pytorch as smp
 
 
 class SegmentationHead(torch.nn.Module):
@@ -48,7 +50,7 @@ class LITFishSegmentation(pl.LightningModule):
     def __init__(self, backbone_type, head_args, learning_rate, threshold) -> None:
         super().__init__()
         self.learning_rate = learning_rate
-        self.loss_function = torch.nn.BCELoss()
+        self.loss_function = smp.losses.DiceLoss(mode="multiclass")
         self.backbone = torch.hub.load("facebookresearch/dinov2", backbone_type)
         self.head = SegmentationHead(**head_args)
         self.val_batch: torch.Tensor | None = None
@@ -67,14 +69,14 @@ class LITFishSegmentation(pl.LightningModule):
         return pred_mask
 
     def configure_optimizers(self) -> Any:
-        optimizer = torch.optim.(self.parameters(), lr=self.learning_rate)
+        optimizer = pytorch_optimizer.Ranger(self.parameters(), lr=self.learning_rate)
         return optimizer
 
     def training_step(self, batch, batch_idx):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction, batch["mask"])
         self.log("train_loss", loss)
-        self.train_iou(prediction.argmax(dim=1), batch["mask"].argmax(dim=1))
+        self.train_iou(prediction.argmax(dim=1), batch["mask"].squeeze(1))
         return loss
 
     def on_train_epoch_end(self):
@@ -83,7 +85,7 @@ class LITFishSegmentation(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction, batch["mask"])
-        self.val_iou(prediction.argmax(dim=1), batch["mask"].argmax(dim=1))
+        self.val_iou(prediction.argmax(dim=1), batch["mask"].squeeze(1))
         self.log("val_loss", loss)
         pred_mask = torch.where(prediction > self.threshold, 1, 0)
 
@@ -99,7 +101,7 @@ class LITFishSegmentation(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         prediction = self.forward(batch)
         loss = self.loss_function(prediction, batch["mask"])
-        self.test_iou(prediction.argmax(dim=1), batch["mask"].argmax(dim=1))
+        self.test_iou(prediction.argmax(dim=1), batch["mask"].squeeze(1))
         self.log("test_loss", loss)
 
     def on_test_epoch_end(self):

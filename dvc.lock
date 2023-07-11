@@ -55,13 +55,13 @@ stages:
       nfiles: 2580
     - path: src\core
       hash: md5
-      md5: ea7bdf25af404827a6ca6b2eaaaa20a7.dir
-      size: 17909
+      md5: c3bcb7c99776ea15806f4632ecab631a.dir
+      size: 18024
       nfiles: 6
     - path: src\train.py
       hash: md5
-      md5: bf4710f48aa9c3d5ace21c310b0970ab
-      size: 1734
+      md5: 25ba52ecdb2432a35ea8f9182d908a0c
+      size: 1814
     params:
       params.yaml:
         dataset:
@@ -136,6 +136,9 @@ stages:
               - -0.3
               - 0.3
               p: 0.5
+            - __class_fullname__: HorizontalFlip
+              always_apply: false
+              p: 0.5
             - __class_fullname__: Normalize
               always_apply: false
               max_pixel_value: 255.0
@@ -155,15 +158,15 @@ stages:
     outs:
     - path: dvclive\metrics.json
       hash: md5
-      md5: 792257d50bb4a69bf468f72c3c932713
-      size: 327
+      md5: d0f30d5195d5fc051da2ede73f51f9c1
+      size: 331
     - path: dvclive\plots
       hash: md5
-      md5: 28033cdc5042d27d212ce4ee94b53531.dir
-      size: 5959099
-      nfiles: 24
+      md5: 590408eae8627db1a645119ebb1ece17.dir
+      size: 16321755
+      nfiles: 53
     - path: weights
       hash: md5
-      md5: 9674c7efa3b910c5c13e27874fdacf52.dir
-      size: 762071810
+      md5: d082729015ca074a878d86b10b6a03b0.dir
+      size: 785165442
       nfiles: 2

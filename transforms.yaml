@@ -9,10 +9,55 @@ transform:
   transforms:
   - __class_fullname__: Resize
     always_apply: false
-    height: 256
+    height: 224
     interpolation: 1
     p: 1
-    width: 256
+    width: 224
+  - __class_fullname__: ShiftScaleRotate
+    always_apply: false
+    border_mode: 4
+    interpolation: 1
+    mask_value: null
+    p: 0.5
+    rotate_limit:
+    - -30
+    - 30
+    rotate_method: largest_box
+    scale_limit:
+    - -0.19999999999999996
+    - 0.19999999999999996
+    shift_limit_x:
+    - -0.2
+    - 0.2
+    shift_limit_y:
+    - -0.2
+    - 0.2
+    value: null
+  - __class_fullname__: RGBShift
+    always_apply: false
+    b_shift_limit:
+    - -25
+    - 25
+    g_shift_limit:
+    - -25
+    - 25
+    p: 0.5
+    r_shift_limit:
+    - -25
+    - 25
+  - __class_fullname__: RandomBrightnessContrast
+    always_apply: false
+    brightness_by_max: true
+    brightness_limit:
+    - -0.3
+    - 0.3
+    contrast_limit:
+    - -0.3
+    - 0.3
+    p: 0.5
+  - __class_fullname__: HorizontalFlip
+    always_apply: false
+    p: 0.5
   - __class_fullname__: Normalize
     always_apply: false
     max_pixel_value: 255.0

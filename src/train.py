@@ -21,8 +21,8 @@ if __name__ == "__main__":
 
     test_data = get_test_dataset(**params["test_dataset"])
     test_dataloader = DataLoader(test_data, batch_size=32, shuffle=False)
-    train_dataloader = DataLoader(train_data, batch_size=32, shuffle=True, num_workers=2)
-    val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False, num_workers=1)
+    train_dataloader = DataLoader(train_data, batch_size=32, shuffle=True, num_workers=2, persistent_workers=True)
+    val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False, num_workers=1, persistent_workers=True)
 
     model = LITFishSegmentation(**params["model"])
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_last=True)
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             logger=DVCLiveLogger(experiment=live),
             default_root_dir="weights",
             callbacks=[checkpoint_callback],
-            max_epochs=100,
+            max_epochs=500,
         )
         trainer.fit(
             model=model,
