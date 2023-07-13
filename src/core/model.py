@@ -11,12 +11,16 @@ import segmentation_models_pytorch as smp
 
 
 class ConvBlock(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size=(3,3)) -> None:
+    def __init__(self, in_channels, out_channels, kernel_size=(3, 3)) -> None:
         super().__init__()
-        self.conv1 = torch.nn.Conv2d(in_channels, out_channels, kernel_size, padding="same")
+        self.conv1 = torch.nn.Conv2d(
+            in_channels, out_channels, kernel_size, padding="same"
+        )
         self.activation = torch.nn.ReLU()
-        self.conv2 = torch.nn.Conv2d(out_channels, out_channels, kernel_size, padding="same")
-    
+        self.conv2 = torch.nn.Conv2d(
+            out_channels, out_channels, kernel_size, padding="same"
+        )
+
     def forward(self, x):
         x = self.conv1(x)
         x = self.activation(x)
@@ -26,33 +30,38 @@ class ConvBlock(torch.nn.Module):
 
 
 class FishUnet(torch.nn.Module):
-    def __init__(self, in_channels=3, output_channels=2, kernel_size=(3,3)):
+    def __init__(self, in_channels=3, output_channels=2, kernel_size=(3, 3)):
         super().__init__()
-        # 224x224        
+        # 224x224
         self.conv_down1 = ConvBlock(in_channels, 64, kernel_size)
-        self.max_pool1 = torch.nn.MaxPool2d((2,2), stride=2) # 112x112
-        
+        self.max_pool1 = torch.nn.MaxPool2d((2, 2), stride=2)  # 112x112
+
         self.conv_down2 = ConvBlock(64, 128, kernel_size)
-        self.max_pool2 = torch.nn.MaxPool2d((2,2), stride=2) # 56x56
-        
+        self.max_pool2 = torch.nn.MaxPool2d((2, 2), stride=2)  # 56x56
+
         self.conv_down3 = ConvBlock(128, 256, kernel_size)
-        self.max_pool3 = torch.nn.MaxPool2d((2,2), stride=2) # 28x28 
-        
+        self.max_pool3 = torch.nn.MaxPool2d((2, 2), stride=2)  # 28x28
+
         self.conv_down4 = ConvBlock(256, 512, kernel_size)
 
-        self.conv_transpose3 = torch.nn.ConvTranspose2d(512, 256, kernel_size=(2,2), stride=2) # 56x56
+        self.conv_transpose3 = torch.nn.ConvTranspose2d(
+            512, 256, kernel_size=(2, 2), stride=2
+        )  # 56x56
         self.conv_up3 = ConvBlock(512, 256, kernel_size)
 
-        self.conv_transpose2 = torch.nn.ConvTranspose2d(256, 128, kernel_size=(2,2), stride=2) # 112x112
-        self.conv_up2 = ConvBlock(256, 128, kernel_size) 
+        self.conv_transpose2 = torch.nn.ConvTranspose2d(
+            256, 128, kernel_size=(2, 2), stride=2
+        )  # 112x112
+        self.conv_up2 = ConvBlock(256, 128, kernel_size)
 
-        self.conv_transpose1 = torch.nn.ConvTranspose2d(128, 64, kernel_size=(2,2), stride=2) # 224x224
+        self.conv_transpose1 = torch.nn.ConvTranspose2d(
+            128, 64, kernel_size=(2, 2), stride=2
+        )  # 224x224
         self.conv_up1 = ConvBlock(128, 64, kernel_size)
 
         self.final_conv = torch.nn.Conv2d(64, output_channels, kernel_size=(1, 1))
 
         self.softmax = torch.nn.Softmax2d()
-
 
     def forward(self, x):
         x_down1 = self.conv_down1(x)
@@ -66,11 +75,10 @@ class FishUnet(torch.nn.Module):
 
         x_down4 = self.conv_down4(x_down4)
 
-        x_up3 = self.conv_transpose3(x_down4) 
+        x_up3 = self.conv_transpose3(x_down4)
         # print(x_up3.shape, x_down3.shape)
         x_up3 = torch.concatenate([x_up3, x_down3], dim=1)
         x_up3 = self.conv_up3(x_up3)
-
 
         x_up2 = self.conv_transpose2(x_up3)
         x_up2 = torch.concatenate([x_up2, x_down2], dim=1)
@@ -83,7 +91,6 @@ class FishUnet(torch.nn.Module):
         res = self.final_conv(x_up1)
         res = self.softmax(res)
         return res
-
 
 
 class LITFishSegmentation(pl.LightningModule):

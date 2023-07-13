@@ -21,8 +21,12 @@ if __name__ == "__main__":
 
     test_data = get_test_dataset(**params["test_dataset"])
     test_dataloader = DataLoader(test_data, batch_size=16, shuffle=False)
-    train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True, num_workers=2, persistent_workers=True)
-    val_dataloader = DataLoader(val_data, batch_size=16, shuffle=False, num_workers=1, persistent_workers=True)
+    train_dataloader = DataLoader(
+        train_data, batch_size=16, shuffle=True, num_workers=2, persistent_workers=True
+    )
+    val_dataloader = DataLoader(
+        val_data, batch_size=16, shuffle=False, num_workers=1, persistent_workers=True
+    )
 
     model = LITFishSegmentation(**params["model"])
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", save_last=True)

@@ -55,17 +55,17 @@ stages:
       nfiles: 2580
     - path: src\core
       hash: md5
-      md5: 2a1da49496b578c7816f82726011318d.dir
-      size: 19993
+      md5: 98f382fcb2bd8a02209715d51d312009.dir
+      size: 20546
       nfiles: 6
     - path: src\train.py
       hash: md5
-      md5: 2cdba5b1f2423e2d4fd7e15a5a30870c
-      size: 1814
+      md5: d7e4ed560685cbca9ab24ed9bf84fba3
+      size: 1846
     params:
       params.yaml:
         dataset:
-          empty_images_ratio: 0.1
+          empty_images_ratio: 0.3
           train_val_ratio: 0.8
         model:
           model_args:
@@ -155,15 +155,15 @@ stages:
     outs:
     - path: dvclive\metrics.json
       hash: md5
-      md5: 8b7125a561e2de15edf58543ff85615a
-      size: 336
+      md5: e8af05d81f6308f4aecced9daccdefa1
+      size: 285
     - path: dvclive\plots
       hash: md5
-      md5: 1d31bf7572c9d0f2f05db1b2a92d89aa.dir
-      size: 2369803
-      nfiles: 20
+      md5: a2ac95710ee7f10f16d29138ddbb7245.dir
+      size: 26014815
+      nfiles: 151
     - path: weights
       hash: md5
-      md5: 3292cdd82308d74f9627fe3993d7779a.dir
+      md5: b4302ab0db3a78321eec83e03e0735dd.dir
       size: 246412222
       nfiles: 2
