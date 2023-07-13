@@ -14,7 +14,7 @@ Tech stack:
 ## Dataset
 [SUIM](https://irvlab.cs.umn.edu/resources/suim-dataset) Dataset.
 
-![](assets\test.jpg)
+![](assets/test.jpg)
 
 For this project only fish masks were sampled.
 
@@ -34,7 +34,7 @@ Train-val set was augmentated using [Albumentations](https://albumentations.ai/)
 ## Results
 The best model was U-Net with IOU 0.598 on test dataset.
 
-![](assets\plots.jpg)
+![](assets/plots.jpg)
 
 ## Demo
 Demo can be accessed running 
@@ -43,5 +43,5 @@ Demo can be accessed running
 python scr\demo.py
 ```
 
-![](assets\demo1.png)
-![](assets\demo2.png)
+![](assets/demo1.png)
+![](assets/demo2.png)
